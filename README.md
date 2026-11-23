@@ -38,9 +38,28 @@ jobs:
 
 | Input | Description | Required | Default |
 | :--- | :--- | :---: | :---: |
-| `version` | Version of Lantern to install (e.g. `latest`, `v0.2.1`) | No | `latest` |
+| `version` | Version of Lantern to install (e.g. `latest`, `v0.2.2`) | No | `latest` |
 | `fail-on-wildcard` | Fail the step if any service binds to `0.0.0.0` or `::` | No | `true` |
 | `ignore-ports` | Comma-separated list of ports to whitelist (e.g. `80,443`) | No | `""` |
+| `sarif-file` | Output path to save OASIS SARIF v2.1.0 security report | No | `""` |
+| `format` | Output format for CLI stdout (`text`, `json`, `sarif`) | No | `text` |
+
+### GitHub Code Scanning & SARIF Alert Ingestion
+
+Upload findings directly into GitHub's **Security → Code scanning alerts** tab:
+
+```yaml
+- name: Audit Port Exposures
+  uses: DhyaanKanoja11/lantern-action@v1
+  with:
+    sarif-file: 'results.sarif'
+  continue-on-error: true
+
+- name: Upload SARIF to GitHub Security
+  uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: results.sarif
+```
 
 ## How It Works
 

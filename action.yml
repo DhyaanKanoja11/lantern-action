@@ -18,6 +18,14 @@ inputs:
     description: 'Comma-separated list of ports to ignore for failure checks (e.g. "80,443")'
     required: false
     default: ''
+  sarif-file:
+    description: 'Output path to save OASIS SARIF v2.1.0 security report for GitHub Code Scanning'
+    required: false
+    default: ''
+  format:
+    description: 'Output format for CLI stdout (text, json, sarif)'
+    required: false
+    default: 'text'
 
 runs:
   using: 'composite'
@@ -59,6 +67,18 @@ runs:
         fi
         if [ -n "${{ inputs.ignore-ports }}" ]; then
           FLAGS="$FLAGS --ignore-ports ${{ inputs.ignore-ports }}"
+        fi
+
+        SARIF_FILE="${{ inputs.sarif-file }}"
+        if [ -n "$SARIF_FILE" ]; then
+          echo "Generating SARIF v2.1.0 report to $SARIF_FILE..."
+          lantern scan --format sarif > "$SARIF_FILE" 2>/dev/null || true
+          echo "SARIF report generated at $SARIF_FILE"
+        fi
+
+        FORMAT="${{ inputs.format }}"
+        if [ -n "$FORMAT" ] && [ "$FORMAT" != "text" ]; then
+          FLAGS="$FLAGS --format $FORMAT"
         fi
 
         echo "Running: lantern scan $FLAGS"
