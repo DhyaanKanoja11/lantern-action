@@ -1,0 +1,65 @@
+﻿name: 'Lantern Security Scan'
+description: 'Scan active network listeners and Docker containers for unintentional wildcard port bindings (0.0.0.0)'
+author: 'Dhyaan Kanoja'
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  version:
+    description: 'Version of Lantern to install (default: "latest")'
+    required: false
+    default: 'latest'
+  fail-on-wildcard:
+    description: 'Fail the workflow step if any service is bound to a wildcard address (0.0.0.0 or ::)'
+    required: false
+    default: 'true'
+  ignore-ports:
+    description: 'Comma-separated list of ports to ignore for failure checks (e.g. "80,443")'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Lantern
+      shell: bash
+      run: |
+        VERSION="${{ inputs.version }}"
+        if [ "$VERSION" = "latest" ] || [ -z "$VERSION" ]; then
+          TAG=$(curl -sSL -H "Accept: application/vnd.github+json" https://api.github.com/repos/DhyaanKanoja11/Lantern/releases/latest | grep '"tag_name":' | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
+        else
+          TAG="$VERSION"
+        fi
+        if [[ ! "$TAG" =~ ^v ]]; then
+          TAG="v$TAG"
+        fi
+        VER="${TAG#v}"
+        ARCH="amd64"
+        case "$(uname -m)" in
+          x86_64) ARCH="amd64" ;;
+          aarch64|arm64) ARCH="arm64" ;;
+        esac
+
+        URL="https://github.com/DhyaanKanoja11/Lantern/releases/download/${TAG}/lantern_${VER}_linux_${ARCH}.tar.gz"
+        echo "Installing Lantern ${TAG} (${ARCH}) from ${URL}..."
+        curl -fsSL "${URL}" -o /tmp/lantern.tar.gz
+        tar -xzf /tmp/lantern.tar.gz -C /tmp/
+        sudo mv /tmp/lantern /usr/local/bin/lantern
+        sudo chmod +x /usr/local/bin/lantern
+        rm -f /tmp/lantern.tar.gz
+        lantern version
+
+    - name: Run Lantern Scan
+      shell: bash
+      run: |
+        FLAGS=""
+        if [ "${{ inputs.fail-on-wildcard }}" = "true" ]; then
+          FLAGS="$FLAGS --fail-on-wildcard"
+        fi
+        if [ -n "${{ inputs.ignore-ports }}" ]; then
+          FLAGS="$FLAGS --ignore-ports ${{ inputs.ignore-ports }}"
+        fi
+
+        echo "Running: lantern scan $FLAGS"
+        lantern scan $FLAGS
