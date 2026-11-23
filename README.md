@@ -1,5 +1,6 @@
 ﻿# Lantern Security Scan Action
 
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Lantern%20Action-blue.svg?logo=github)](https://github.com/marketplace/actions/lantern-security-scan)
 [![GitHub Action](https://img.shields.io/badge/action-lantern--action-blue?logo=github-actions)](https://github.com/DhyaanKanoja11/lantern-action)
 [![Lantern](https://img.shields.io/badge/security-Lantern-emerald)](https://github.com/DhyaanKanoja11/Lantern)
 
